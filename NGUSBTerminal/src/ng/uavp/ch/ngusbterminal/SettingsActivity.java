@@ -164,21 +164,6 @@ public class SettingsActivity extends ActionBarActivity {
 			spinner5.setBackgroundColor(Color.MAGENTA);
 		else
 			spinner5.setBackgroundColor(Color.TRANSPARENT);
-		
-		if(usbDevicesFound == 0)
-		{
-			// TODO: no timer, but react on system detected serial USB device
-			new CountDownTimer(2000, 2000) {
-
-			     public void onTick(long millisUntilFinished) {
-			     }
-
-			     public void onFinish() {
-			    	 ScanAdapter();
-			     }
-			  }.start();
-
-		}
 	}
  
 	@Override
