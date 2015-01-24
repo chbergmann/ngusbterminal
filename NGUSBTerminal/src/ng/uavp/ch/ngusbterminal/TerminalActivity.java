@@ -51,6 +51,7 @@ public class TerminalActivity extends ActionBarActivity {
 	public static class TerminalEditText extends EditText implements UsbSerialComm.ReceivedEvent {    
 		UsbSerialComm usb;
 		int escseq = 0;
+		int cursorLeft = 0;
 		TerminalInputConnection inputConnection;
 		
 		public TerminalEditText(Context context) {
@@ -97,7 +98,37 @@ public class TerminalActivity extends ActionBarActivity {
 			        	case KeyEvent.KEYCODE_DEL:
 			        		usb.sendText(String.valueOf((char)0x08));
 			        		break;
-	
+
+			            case KeyEvent.KEYCODE_DPAD_UP:
+				        	usb.sendText(String.valueOf((char)0x1b));
+				        	usb.sendText(String.valueOf('['));
+				        	usb.sendText(String.valueOf('A'));
+				         	break;
+
+			            case KeyEvent.KEYCODE_DPAD_DOWN:
+			            	usb.sendText(String.valueOf(0x1b));
+			            	usb.sendText(String.valueOf('['));
+			            	usb.sendText(String.valueOf('B'));
+			            	break;
+
+			            case KeyEvent.KEYCODE_DPAD_RIGHT:
+			            	if(cursorLeft > 0)
+			            		cursorLeft--;
+			            	
+			            	usb.sendText(String.valueOf((char)0x1b));
+			            	usb.sendText(String.valueOf('['));
+			            	usb.sendText(String.valueOf('C'));
+			            	break;
+
+			            case KeyEvent.KEYCODE_DPAD_LEFT:
+			            	if(cursorLeft < getEditableText().length());
+			            		cursorLeft++;
+			            		
+			            	usb.sendText(String.valueOf((char)0x1b));
+			            	usb.sendText(String.valueOf('['));
+			            	usb.sendText(String.valueOf('D'));
+			            	break;
+			            	
 		        		default:	        			
 		        			return true;
 		        	}
@@ -147,6 +178,7 @@ public class TerminalActivity extends ActionBarActivity {
 			    	npos = getEditableText().length() + str.length();
 			    	rpos = -1;
 			    	str.append((char)data[i]);
+			    	cursorLeft = 0;
 					break;
 
 				case '\r':
@@ -175,7 +207,7 @@ public class TerminalActivity extends ActionBarActivity {
 							
 			if(str.length() > 0) {
 				append(str.toString());
-				setSelection(getEditableText().length());
+				setSelection(getEditableText().length() - cursorLeft);
 			}
 			return 0;
     	}
