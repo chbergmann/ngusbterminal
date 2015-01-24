@@ -32,6 +32,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.Selection;
+import android.text.method.ArrowKeyMovementMethod;
+import android.text.method.MovementMethod;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -39,7 +43,8 @@ import android.view.MenuItem;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
-import android.widget.EditText;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import com.ftdi.j2xx.D2xxManager;
 
@@ -48,7 +53,7 @@ public class TerminalActivity extends ActionBarActivity {
 	UsbSerialComm usb;
 	static final String NEWLINE = "\n\r";
 	
-	public static class TerminalEditText extends EditText implements UsbSerialComm.ReceivedEvent {    
+	public static class TerminalEditText extends TextView {    
 		UsbSerialComm usb;
 		int escseq = 0;
 		int cursorLeft = 0;
@@ -60,18 +65,33 @@ public class TerminalActivity extends ActionBarActivity {
 		
 		public TerminalEditText(Context context, AttributeSet attrs) {
 			super(context, attrs);
+	        setFocusableInTouchMode(true); 
 		}
 		
 		public TerminalEditText(Context context, AttributeSet attrs, int defStyle) {
 		    super(context, attrs, defStyle);
 		}
-		
+
+	    @Override
+	    protected MovementMethod getDefaultMovementMethod() {
+	        return ArrowKeyMovementMethod.getInstance();
+	    }
+	    
 	    @Override
 	    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
 	        return new TerminalInputConnection(super.onCreateInputConnection(outAttrs),
 	                true);
 	    }
 
+	    @Override
+	    public Editable getText() {
+	        return (Editable) super.getText();
+	    }
+	    
+	    public void setSelection(int pos) {
+	        Selection.setSelection(getText(), pos);
+	    }
+	    
 	    private class TerminalInputConnection extends InputConnectionWrapper {
 
 	        public TerminalInputConnection(InputConnection target, boolean mutable) {
@@ -121,7 +141,7 @@ public class TerminalActivity extends ActionBarActivity {
 			            	break;
 
 			            case KeyEvent.KEYCODE_DPAD_LEFT:
-			            	if(cursorLeft < getEditableText().length());
+			            	if(cursorLeft < length());
 			            		cursorLeft++;
 			            		
 			            	usb.sendText(String.valueOf((char)0x1b));
@@ -175,14 +195,14 @@ public class TerminalActivity extends ActionBarActivity {
 					break;
 					
 				case '\n':
-			    	npos = getEditableText().length() + str.length();
+			    	npos = length() + str.length();
 			    	rpos = -1;
 			    	str.append((char)data[i]);
 			    	cursorLeft = 0;
 					break;
 
 				case '\r':
-			    	rpos = getEditableText().length() + str.length();
+			    	rpos = length() + str.length();
 					break;
 				
 				default:
@@ -195,8 +215,8 @@ public class TerminalActivity extends ActionBarActivity {
 				    		escseq = 0;
 				    	}
 				    }
-				    else if (rpos >= 0 && rpos < getEditableText().length()) {
-				    	setText(getEditableText().subSequence(0, rpos));
+				    else if (rpos >= 0 && rpos < length()) {
+				    	setText(getText().subSequence(0, rpos));
 				    }
 				    else {
 				    	str.append((char)data[i]);
@@ -207,7 +227,7 @@ public class TerminalActivity extends ActionBarActivity {
 							
 			if(str.length() > 0) {
 				append(str.toString());
-				setSelection(getEditableText().length() - cursorLeft);
+				setSelection(length() - cursorLeft);
 			}
 			return 0;
     	}
@@ -250,11 +270,18 @@ public class TerminalActivity extends ActionBarActivity {
 		uart.flowControl = (byte)sharedPref.getInt("flowcontrol", uart.flowControl);
 		
 		for(int i=0; i<devList.length; i++) {
-			terminalView.setSelection(terminalView.getText().length());
+			//terminalView.setSelection(terminalView.getText().length());
 			if(devList[i].equals(interfce)) {
 				usb.openDevice(i, uart);
 				terminalView.setText(getString(R.string.connected_to) + " " + devList[i] + "\n\n");
 				terminalView.HookUsbDevice(usb);
+				
+				    if (terminalView.requestFocus()) {
+				        InputMethodManager imm = (InputMethodManager)
+				                getSystemService(Context.INPUT_METHOD_SERVICE);
+				        imm.showSoftInput(terminalView, InputMethodManager.SHOW_IMPLICIT);
+				    }
+				
 				return;
 			}
 		}

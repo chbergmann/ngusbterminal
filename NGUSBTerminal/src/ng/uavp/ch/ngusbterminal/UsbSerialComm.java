@@ -40,16 +40,6 @@ public class UsbSerialComm {
 	
     protected Handler recvHandler = null;
     
-    interface ReceivedEvent {
-        /**
-         * This method will be invoked when data is received at the interface.
-         * 
-         * @param data The received data
-         * @return Nr. of bytes received
-         */
-        public int OnReceived(byte[] data);
-    }
-    
     // Method for listener classes to register themselves
     public void addReceiveEventHandler(Handler mHandler)
     {
