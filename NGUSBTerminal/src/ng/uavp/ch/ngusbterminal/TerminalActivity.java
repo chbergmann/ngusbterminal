@@ -46,7 +46,7 @@ import com.ftdi.j2xx.D2xxManager;
 public class TerminalActivity extends ActionBarActivity {
 
 	UsbSerialComm usb;
-	static final String NEWLINE = "\r\n";
+	static final String NEWLINE = "\n\r";
 	
 	public static class TerminalEditText extends EditText implements UsbSerialComm.ReceivedEvent {    
 		UsbSerialComm usb;
@@ -119,7 +119,7 @@ public class TerminalActivity extends ActionBarActivity {
 	    		@Override
 	            public void handleMessage(Message inputMessage) {
 	    			byte[] receivedData = (byte[]) inputMessage.obj;
-	    			OnReceived(receivedData);	    			
+	    			OnReceived(receivedData);
 	    		}
 	        };
 
@@ -132,12 +132,25 @@ public class TerminalActivity extends ActionBarActivity {
 	        setSelection(text.length());
 	    }
     	
+        int npos = 0;
+        int rpos = -1;
+        
     	public int OnReceived(byte[] data) {
     		StringBuilder str = new StringBuilder();
 			for(int i=0; i<data.length; i++) {
 				switch(data[i]) {  
 				case 0x1b: 	// ESC sequence
 					escseq = 1;
+					break;
+					
+				case '\n':
+			    	npos = getEditableText().length() + str.length();
+			    	rpos = -1;
+			    	str.append((char)data[i]);
+					break;
+
+				case '\r':
+			    	rpos = getEditableText().length() + str.length();
 					break;
 				
 				default:
@@ -149,6 +162,9 @@ public class TerminalActivity extends ActionBarActivity {
 				    		
 				    		escseq = 0;
 				    	}
+				    }
+				    else if (rpos >= 0 && rpos < getEditableText().length()) {
+				    	setText(getEditableText().subSequence(0, rpos));
 				    }
 				    else {
 				    	str.append((char)data[i]);
