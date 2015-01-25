@@ -184,7 +184,7 @@ public class TerminalActivity extends ActionBarActivity {
 	    }
     	
         int npos = 0;
-        int rpos = -1;
+        boolean got_r = false;
         
     	public int OnReceived(byte[] data) {
     		StringBuilder str = new StringBuilder();
@@ -195,14 +195,14 @@ public class TerminalActivity extends ActionBarActivity {
 					break;
 					
 				case '\n':
-			    	npos = length() + str.length();
-			    	rpos = -1;
 			    	str.append((char)data[i]);
+			    	npos = length() + str.length();
+					got_r = false;
 			    	cursorLeft = 0;
 					break;
 
 				case '\r':
-			    	rpos = length() + str.length();
+					got_r = true;
 					break;
 				
 				default:
@@ -215,8 +215,20 @@ public class TerminalActivity extends ActionBarActivity {
 				    		escseq = 0;
 				    	}
 				    }
-				    else if (rpos >= 0 && rpos < length()) {
-				    	setText(getText().subSequence(0, rpos));
+				    else if (got_r) {
+				    	int strstart = npos - length();
+				    	if(strstart >= 0) {
+				    		str.delete(strstart, str.length() - 1);
+				    	}
+				    	else {
+				    		str.delete(0, str.length());
+				    		
+				    		if(npos < length())
+				    			//setText(getText().subSequence(0, npos));
+				    			str.append("\n");	// append Text because replacing is too slow
+				    	}
+						got_r = false;
+				    	str.append((char)data[i]);
 				    }
 				    else {
 				    	str.append((char)data[i]);

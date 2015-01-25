@@ -183,13 +183,12 @@ public class UsbSerialComm {
 		                msg.sendToTarget();
 			        }
 				}
-				else {
-					try {
-						Thread.sleep(50);
-					}
-					catch (InterruptedException e) {
-					}
+				
+				try {
+					Thread.sleep(50);
 				}
+				catch (InterruptedException e) {
+				}		
 			}
 		}
 	}
