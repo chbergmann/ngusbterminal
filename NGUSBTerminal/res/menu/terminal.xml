@@ -4,14 +4,33 @@
     tools:context="ng.uavp.ch.ngusbterminal.TerminalActivity" >
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        android:icon="@drawable/abc_ic_menu_moreoverflow_normal_holo_dark"
-        app:showAsAction="ifRoom"/>
+        android:icon="@drawable/ic_launcher"
+        android:showAsAction="ifRoom" />
 
-    <item android:id="@+id/action_exit"
-        android:title="@string/action_exit"
+    <item android:id="@+id/menu_clear"
+        android:orderInCategory="101"
+        android:title="@string/action_clear"
         android:icon="@drawable/abc_ic_clear"
+        android:showAsAction="ifRoom" />
+        
+    <item android:id="@+id/menu_writefile"
+        android:orderInCategory="102"
+        android:title="@string/action_start_log"
+        android:icon="@drawable/ic_doc_save"
+        android:showAsAction="ifRoom" />
+    
+    <item android:id="@+id/menu_readfile"
+        android:orderInCategory="103"
+        android:title="@string/action_readfile"
+        android:icon="@drawable/ic_doc_open"
+        android:showAsAction="ifRoom" />
+    
+    <item android:id="@+id/menu_exit"
+        android:orderInCategory="111"
+        android:title="@string/action_exit"
+        android:icon="@drawable/abc_ic_clear_normal"
         android:showAsAction="ifRoom" />
 </menu>

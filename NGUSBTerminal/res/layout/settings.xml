@@ -7,7 +7,7 @@
     android:gravity="center"
     android:verticalSpacing="20dp"
     android:horizontalSpacing="20dp"
-    tools:context="ng.uavp.ch.ngusbterminal.SettingsActivity"
+    tools:context="ng.uavp.ch.ngusbterminal.SettingsFragment"
     android:id="@+id/GridLayout1" >
 
     <TextView
@@ -92,7 +92,6 @@
         android:id="@+id/button1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:onClick="doConnect"
         android:layout_marginTop="10dp"
         android:layout_gravity="fill_horizontal"
         android:layout_columnSpan="2"

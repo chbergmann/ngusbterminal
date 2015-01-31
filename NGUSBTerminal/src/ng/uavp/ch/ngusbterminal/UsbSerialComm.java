@@ -1,6 +1,6 @@
 /*
  * NGUSBTerminal - The Next Generation Multicopter Android Terminal
- * Copyright (C) 2007 - 2015 by the UAVP-NG Project,
+ * Copyright (C) 2015 by the UAVP-NG Project,
  *     Christian Bergmann <christi@dev.uavp.ch>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -78,10 +78,10 @@ public class UsbSerialComm {
 		return devStr;
 	}
 	
-	public int openDevice(int index, UartSettings settings) {
+	public boolean openDevice(int index, UartSettings settings) {
 		ftDev = ftD2xx.openByIndex(global_context, index);
 		if(ftDev == null)
-			return -1;
+			return false;
 
 		// configure port
 		// reset to UART mode for 232 devices
@@ -139,7 +139,7 @@ public class UsbSerialComm {
 		bReadTheadEnable = true;
 		ReadThread rthread = new ReadThread();
 		rthread.start();
-		return 0;
+		return true;
 	}
 	
 	public void closeDevice() {
