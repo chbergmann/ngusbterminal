@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +42,11 @@ public class MainActivity extends ActionBarActivity {
 	ShellFragment shell = null;
 	SettingsFragment settings = null;
 
+    public interface ISerialComm {
+    	public void addReceiveEventHandler(Handler mHandler);
+    	public int sendBytes(byte[] data);
+    	public int sendText(CharSequence text);
+    }
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,19 +55,26 @@ public class MainActivity extends ActionBarActivity {
 
 		usb = new UsbSerialComm(this);
 
+		if(OpenUsb())
+			SelectShell();
+		else
+			SelectSettings();
+	}
+	
+	public boolean OpenUsb() {
 		String[] devList;
 		try {
 			devList = usb.createDeviceList();
 		} catch (D2xxManager.D2xxException e) {
 			showToast(e.getLocalizedMessage(), Toast.LENGTH_SHORT);
-			return;
+			return false;
 		}
 
 		if (devList.length == 0) {
-			/* open Settings dialog if not connected */
-			SelectSettings();
-			return;
+			return false;
 		}
+		
+		usb.closeDevice();
 
 		UsbSerialComm.UartSettings uart = new UsbSerialComm.UartSettings();
 
@@ -78,23 +91,22 @@ public class MainActivity extends ActionBarActivity {
 		for (int i = 0; i < devList.length; i++) {
 			// terminalView.setSelection(terminalView.getText().length());
 			if (devList[i].equals(interfce)) {
-				if(usb.openDevice(i, uart)) {				
-					SelectShell();
+				if(usb.openDevice(i, uart)) {	
 					//shell.setText(getString(R.string.connected_to) + " " + devList[i] + "\n\n");
-					return;
+					return true;
 				}
 			}
 		}
-
-		SelectSettings();
+		
+		return false;
 	}
 	
 	public void SelectShell() {	
 		if(shell == null) {
-			shell = new ShellFragment();
+			shell = new ShellFragment(usb);
 		}
 		getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, shell).commit();		
+                .replace(R.id.fragment_container, shell).commit();	
 	}
 
 	public void SelectSettings() {	
@@ -140,8 +152,11 @@ public class MainActivity extends ActionBarActivity {
 		}
 
 		case R.id.menu_clear: {
-			ShellFragment.TerminalEditText tet = (ShellFragment.TerminalEditText) findViewById(R.id.editText1);
-			tet.setText("");
+			if(shell != null) {
+				ShellFragment.TerminalEditText tet = (ShellFragment.TerminalEditText) 
+						findViewById(R.id.editText1);
+				tet.setText("");
+			}
 			return true;
 		}
 		}

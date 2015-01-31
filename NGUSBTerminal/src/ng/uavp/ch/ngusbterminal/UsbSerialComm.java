@@ -32,13 +32,14 @@ import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.D2xxManager.FtDeviceInfoListNode;
 import com.ftdi.j2xx.FT_Device;
 
-public class UsbSerialComm {
+public class UsbSerialComm implements MainActivity.ISerialComm {
 	public static D2xxManager ftD2xx = null;
 	FT_Device ftDev = null;
 	static Context global_context;
 	boolean bReadTheadEnable = false;
 	
     protected Handler recvHandler = null;
+    
     
     // Method for listener classes to register themselves
     public void addReceiveEventHandler(Handler mHandler)
@@ -149,13 +150,15 @@ public class UsbSerialComm {
 		
 		ftDev.close();
 	}
-	
+
+	@Override
 	public int sendBytes(byte[] data) {
 		if(ftDev == null || !ftDev.isOpen())
 			return -1;
 		return ftDev.write(data, data.length);
 	}
-	
+
+	@Override
 	public int sendText(CharSequence text) {
 		if(ftDev == null || !ftDev.isOpen())
 			return -1;

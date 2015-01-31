@@ -26,12 +26,14 @@ package ng.uavp.ch.ngusbterminal;
 
 
 import ng.uavp.ch.ngusbterminal.UsbSerialComm.UartSettings;
+import ng.uavp.ch.ngusbterminal.MainActivity;
 
 import com.ftdi.j2xx.D2xxManager;
 
 import android.support.v4.app.Fragment;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -149,9 +151,9 @@ public class SettingsFragment extends Fragment {
 		});
 	    
 		if(usbDevicesFound == 0)
-			spinner5.setBackgroundColor(Color.MAGENTA);
+			spinner6.setBackgroundColor(Color.MAGENTA);
 		else
-			spinner5.setBackgroundColor(Color.TRANSPARENT);
+			spinner6.setBackgroundColor(Color.TRANSPARENT);
 		
 		return thisview;
 	}
@@ -218,7 +220,8 @@ public class SettingsFragment extends Fragment {
 		
 		editor.commit();
 
-        activity.SelectShell();
+		if(activity.OpenUsb())
+			activity.SelectShell();
 	}
 
 }
