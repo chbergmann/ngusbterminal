@@ -262,6 +262,25 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 			}
 		});
 
+		Button mkdirButton = (Button) view.findViewById(R.id.buttonMkdir);
+		mkdirButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(selectedFile.getText().length() == 0) {
+					selectedFileExt.setText("");
+					selectedFile.setHint(R.string.hint_dirname);
+					return;
+				}
+				File folder = new File(selectedPath.getText() + "/" + selectedFile.getText());
+				if (!folder.exists()) {
+				   folder.mkdir();
+				   selectedFileExt.setText(fileExtString);
+				   selectedFile.setHint(R.string.hint_filename_unadorned);
+				   RefreshDirList();
+				}				
+			}
+		});
+		
         return view;
     }
 	
@@ -305,24 +324,29 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 					currentDirectory = 	selected;
 				}
 
-				// Refresh the listview display for the newly selected directory.
-				fileList = getDirectoryContent(currentDirectory);
-				DirectoryDisplay displayFormatter = new DirectoryDisplay(getActivity(), fileList);
-				directoryView.setAdapter(displayFormatter);
-				
-				// Update the path TextView widgets.  Tell the user where he or she is and clear the selected file.
-				currentFile = null;
-				path = currentDirectory.getAbsolutePath();
-				if (currentDirectory.getParent() != null) {
-					path += "/";
-				}
-
-				selectedPath.setText(path);	
-				if (selectionMode == Mode.FileSelector) {
-					selectedFile.setText(null);
-				}
+				RefreshDirList();
 			}
 				
+		}
+		
+	}
+	
+	private void RefreshDirList() {
+		// Refresh the listview display for the newly selected directory.
+		fileList = getDirectoryContent(currentDirectory);
+		DirectoryDisplay displayFormatter = new DirectoryDisplay(getActivity(), fileList);
+		directoryView.setAdapter(displayFormatter);
+		
+		// Update the path TextView widgets.  Tell the user where he or she is and clear the selected file.
+		currentFile = null;
+		String path = currentDirectory.getAbsolutePath();
+		if (currentDirectory.getParent() != null) {
+			path += "/";
+		}
+
+		selectedPath.setText(path);	
+		if (selectionMode == Mode.FileSelector) {
+			selectedFile.setText(null);
 		}
 		
 	}

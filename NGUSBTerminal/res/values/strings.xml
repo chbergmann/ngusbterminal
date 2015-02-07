@@ -25,10 +25,12 @@
     <string name="alert_cancel">Cancel</string>
     <string name="alert_file_save_as">Save as</string>
     <string name="hint_filename_unadorned">Filename</string>
+    <string name="hint_dirname">Directoryname</string>
     <string name="alert_file_select">Select file</string>
     <string name="alert_supply_filename">Please enter a file name</string>
     <string name="alert_bad_filename_chars">The file name contains bad characters</string>
     <string name="alert_file_exists">The file already exists</string>
+    <string name="alert_mkdir">Create directory</string>
     <string name="filename">Filename</string>
     <string name="err_sd_not_readable">SD card is not readable !</string>
     <string name="err_sd_not_writeable">Cannot write to SD card !</string>
