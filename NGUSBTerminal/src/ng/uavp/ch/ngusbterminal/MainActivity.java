@@ -24,6 +24,15 @@
 
 package ng.uavp.ch.ngusbterminal;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -36,11 +45,13 @@ import android.widget.Toast;
 
 import com.ftdi.j2xx.D2xxManager;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements FileSelectFragment.IFileSelectCallbacks {
 
 	UsbSerialComm usb = null;
 	ShellFragment shell = null;
 	SettingsFragment settings = null;
+	final static int ACTION_READFILE = 1;
+	final static int ACTION_WRITEFILE = 2;
 
     public interface ISerialComm {
     	public void addReceiveEventHandler(Handler mHandler);
@@ -89,10 +100,9 @@ public class MainActivity extends ActionBarActivity {
 		uart.flowControl = (byte) sharedPref.getInt("flowcontrol", uart.flowControl);
 
 		for (int i = 0; i < devList.length; i++) {
-			// terminalView.setSelection(terminalView.getText().length());
 			if (devList[i].equals(interfce)) {
 				if(usb.openDevice(i, uart)) {	
-					//shell.setText(getString(R.string.connected_to) + " " + devList[i] + "\n\n");
+					showToast(getString(R.string.connected_to) + " " + devList[i] + "\n\n", Toast.LENGTH_SHORT);
 					return true;
 				}
 			}
@@ -171,7 +181,7 @@ public class MainActivity extends ActionBarActivity {
 
 	/* -------------------------- File Operations -------------------------- */
 
-	boolean logging = false;
+	FileOutputStream outputStream = null;
 
 	/* Checks if external storage is available for read and write */
 	public boolean isExternalStorageWritable() {
@@ -193,16 +203,29 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	protected void readFile() {
-		String fragTag = getResources().getString(R.string.action_readfile);
-
-
+		FileSelectFragment filechooser = new FileSelectFragment(
+				FileSelectFragment.Mode.FileSelector, ACTION_READFILE, this);	
+		filechooser.setTitle(getString(R.string.action_readfile));
+		// Restrict selection to *.txt files
+		ArrayList<String> allowedExtensions = new ArrayList<String>();
+		allowedExtensions.add(".txt");
+		filechooser.setFilter(allowedExtensions);
+		
+		getSupportFragmentManager().beginTransaction()
+        	.replace(R.id.fragment_container, filechooser).commit();
 	}
 
 	protected void writeFile() {
-		String filter = getResources().getString(R.string.file_extension_txt);
-		String fragTag = getResources().getString(R.string.action_start_log);
-
-
+		FileSelectFragment filechooser = new FileSelectFragment(
+				FileSelectFragment.Mode.FileSelector, ACTION_WRITEFILE, this);
+		filechooser.setTitle(getString(R.string.action_start_log));
+		// Restrict selection to *.txt files
+		ArrayList<String> allowedExtensions = new ArrayList<String>();
+		allowedExtensions.add(".txt");
+		filechooser.setFilter(allowedExtensions);
+		
+		getSupportFragmentManager().beginTransaction()
+        	.replace(R.id.fragment_container, filechooser).commit();	
 	}
 
 	// Act on a validated [positive] button click or a [negative] button
@@ -224,6 +247,57 @@ public class MainActivity extends ActionBarActivity {
 	private void showToast(String text, int lengthShort) {
 		Toast toast = Toast.makeText(this, text, lengthShort);
 		toast.show();	
+	}
+
+	@Override
+	public void onConfirmSelect(int actionID, String absolutePath, String fileName) {		
+		// Cancel pressed
+		if(fileName == "") {
+			SelectShell();	
+			return;	
+		}
+		
+		switch (actionID) {
+		case ACTION_READFILE:
+			if(!isExternalStorageReadable()) {
+				showToast(R.string.err_sd_not_readable, Toast.LENGTH_SHORT);
+				return;
+			}
+			try {
+				FileInputStream inputStream = openFileInput(absolutePath + "/" + fileName);
+				byte[] buffer = new byte[inputStream.available()];
+				inputStream.read(buffer);
+				inputStream.close();
+				usb.sendBytes(buffer);
+			} catch (FileNotFoundException e1) {
+				showToast(e1.getMessage(), Toast.LENGTH_SHORT);
+			} catch (IOException e2) {
+				showToast(e2.getMessage(), Toast.LENGTH_SHORT);
+			}
+			break;
+
+		case ACTION_WRITEFILE: {
+			if(!isExternalStorageWritable()) {
+				showToast(R.string.err_sd_not_writeable, Toast.LENGTH_SHORT);
+				return;
+			}
+			try {
+				outputStream = openFileOutput(absolutePath + "/" + fileName, Context.MODE_PRIVATE);
+				String str = getString(R.string.action_start_log) + " " + fileName;
+				showToast(str, Toast.LENGTH_SHORT);
+			} catch (Exception e) {
+				showToast(e.getMessage(), Toast.LENGTH_SHORT);
+			}
+			break;
+		}
+		}
+		SelectShell();
+	}
+
+	@Override
+	public boolean isValid(int actionID, String absolutePath, String fileName) {
+		String sddir = Environment.getExternalStorageDirectory().getAbsolutePath();
+		return absolutePath.startsWith(sddir);
 	}
 	
 }

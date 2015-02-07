@@ -1,0 +1,82 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin">
+
+    <TextView 
+        android:id="@+id/title"
+        android:layout_width="fill_parent"
+    	android:layout_height="wrap_content" 
+    	android:textStyle="bold"
+    	android:text="@string/alert_file_select"
+        android:gravity="start"/>
+    
+	<ListView
+	    android:id="@+id/directoryView"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" />
+
+	<View 
+	    android:layout_width="fill_parent"
+	    android:layout_height="2dp"
+	    android:background="@android:color/darker_gray"/>
+	
+	<LinearLayout
+	    android:id="@+id/nameArea"
+    	android:orientation="horizontal"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+
+	    <TextView
+	        android:id="@+id/selectedPath"
+	        android:layout_width="wrap_content"
+	    	android:layout_height="wrap_content" 
+	        android:gravity="start" />
+	    
+	    <EditText 
+	        android:id="@+id/selectedFile"
+	        android:layout_width="fill_parent"
+	    	android:layout_height="wrap_content"
+	        android:hint="@string/filename" 
+	        android:inputType="text"
+	        android:gravity="end" />
+	    	
+	    <TextView 
+	        android:id="@+id/fileExt"
+	        android:layout_width="wrap_content"
+	    	android:layout_height="wrap_content" 
+	        android:gravity="start" />
+	    
+	</LinearLayout>
+
+	<View 
+	    android:layout_width="fill_parent"
+	    android:layout_height="2dp"
+	    android:background="@android:color/darker_gray"/>
+	
+	<LinearLayout
+	    android:id="@+id/buttonArea"
+    	android:orientation="horizontal"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" >
+
+	    <Button
+	        android:id="@+id/buttonCancel"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:text="@string/alert_cancel" />
+	    
+	    <Button
+	        android:id="@+id/buttonOK"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:text="@string/alert_ok" />
+	    	
+	</LinearLayout>
+
+</LinearLayout>
