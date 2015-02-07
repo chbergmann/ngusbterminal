@@ -24,8 +24,15 @@
 
 package ng.uavp.ch.ngusbterminal;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import ng.uavp.ch.ngusbterminal.MainActivity.ISerialComm;
+
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import com.ftdi.j2xx.D2xxManager;
@@ -37,14 +44,22 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 	FT_Device ftDev = null;
 	static Context global_context;
 	boolean bReadTheadEnable = false;
-	
-    protected Handler recvHandler = null;
     
+	public interface IReceive {
+		void OnReceive(byte[] data);
+	}
+
+    private List<Handler> receiveHandlerList = new ArrayList<Handler>();
     
     // Method for listener classes to register themselves
-    public void addReceiveEventHandler(Handler mHandler)
+    public void addReceiveEventHandler(Handler handler)
     {
-    	recvHandler = mHandler;
+    	receiveHandlerList.add(handler);
+    }
+
+    public void removeReceiveEventHandler(Handler handler)
+    {
+    	receiveHandlerList.remove(handler);
     }
 	
     final byte XON = 0x11;    /* Resume transmission */
@@ -181,10 +196,10 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 					
 					ftDev.read(readbuffer, readcount);
 					
-			        if (recvHandler != null) {
+					for(Handler recvHandler : receiveHandlerList) {
 			        	Message msg = recvHandler.obtainMessage(0, readbuffer);
-		                msg.sendToTarget();
-			        }
+			        	recvHandler.sendMessage(msg);
+					}
 				}
 				
 				try {
@@ -195,4 +210,5 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 			}
 		}
 	}
+	
 }

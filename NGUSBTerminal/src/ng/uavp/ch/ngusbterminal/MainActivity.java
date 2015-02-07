@@ -24,20 +24,28 @@
 
 package ng.uavp.ch.ngusbterminal;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringBufferInputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+
+import ng.uavp.ch.ngusbterminal.UsbSerialComm.IReceive;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -50,6 +58,8 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 	UsbSerialComm usb = null;
 	ShellFragment shell = null;
 	SettingsFragment settings = null;
+	private Menu menu;
+	
 	final static int ACTION_READFILE = 1;
 	final static int ACTION_WRITEFILE = 2;
 
@@ -130,6 +140,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
+		this.menu = menu;
 		getMenuInflater().inflate(R.menu.terminal, menu);
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -157,7 +168,10 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		}
 
 		case R.id.menu_writefile: {
-			writeFile();
+			if(outputStream != null)
+				StopLoggingToFile();
+			else
+				writeFile();
 			return true;
 		}
 
@@ -181,7 +195,8 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 
 	/* -------------------------- File Operations -------------------------- */
 
-	FileOutputStream outputStream = null;
+	BufferedOutputStream outputStream = null;
+	Handler writeTofileHandler = null;
 
 	/* Checks if external storage is available for read and write */
 	public boolean isExternalStorageWritable() {
@@ -264,8 +279,9 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 				return;
 			}
 			try {
-				FileInputStream inputStream = openFileInput(absolutePath + "/" + fileName);
-				byte[] buffer = new byte[inputStream.available()];
+				File inputFile = new File(absolutePath, fileName);
+				BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
+				byte[] buffer = new byte[(int)inputFile.length()];
 				inputStream.read(buffer);
 				inputStream.close();
 				usb.sendBytes(buffer);
@@ -282,7 +298,22 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 				return;
 			}
 			try {
-				outputStream = openFileOutput(absolutePath + "/" + fileName, Context.MODE_PRIVATE);
+				File outputFile = new File(absolutePath, fileName);
+				outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+
+		    	writeTofileHandler = new Handler(Looper.getMainLooper()) {
+					@Override
+					public void handleMessage(Message inputMessage) {
+						byte[] receivedData = (byte[]) inputMessage.obj;
+						OnReceiveForFile(receivedData);
+					}
+				};
+
+				usb.addReceiveEventHandler(writeTofileHandler);
+				
+			    MenuItem item = menu.findItem(R.id.menu_writefile);
+			    item.setTitle(R.string.action_stop_log);
+				
 				String str = getString(R.string.action_start_log) + " " + fileName;
 				showToast(str, Toast.LENGTH_SHORT);
 			} catch (Exception e) {
@@ -299,5 +330,32 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		String sddir = Environment.getExternalStorageDirectory().getAbsolutePath();
 		return absolutePath.startsWith(sddir);
 	}
-	
+    
+    private void OnReceiveForFile(byte[] data) {
+    	if(outputStream == null) {
+    		usb.removeReceiveEventHandler(writeTofileHandler);
+    		return;
+    	}
+    	try {
+			outputStream.write(data);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    private void StopLoggingToFile() {
+    	if(outputStream == null)
+    		return;
+    	
+    	usb.removeReceiveEventHandler(writeTofileHandler);
+    	try {
+			outputStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		outputStream = null;
+		writeTofileHandler = null;
+	    MenuItem item = menu.findItem(R.id.menu_writefile);
+	    item.setTitle(R.string.action_start_log);
+    }
 }

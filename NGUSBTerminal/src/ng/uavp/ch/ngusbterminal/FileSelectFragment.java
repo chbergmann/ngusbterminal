@@ -52,6 +52,9 @@ import android.widget.AdapterView.OnItemClickListener;
  * */
 public class FileSelectFragment extends Fragment implements OnItemClickListener {
 
+    public interface FileSelectedListener {
+        void fileSelected(File file);
+    }
 	/*
 	 * Use the unicode "back" triangle to indicate there is a parent 
 	 * directory rather than an icon to minimise file dependencies.
@@ -84,7 +87,8 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 	private int actionID;
 	
 	// Filtered view of the directories.
-	private FilenameFilter fileFilter;
+	private FilenameFilter fileFilter;	
+
 	
 	/** How do we want to use the selector? */
 	public enum Mode {
@@ -285,6 +289,8 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 			    !name.equals(PARENT) &&
 			    selectionMode == Mode.FileSelector ) {
 				selectedFile.setText(currentFile.getName());
+				if(currentFile.getName().contains("."))
+					selectedFileExt.setText("");
 			}
 				
 			if ((currentFile.isDirectory() || name.equals(PARENT)) 
@@ -407,9 +413,7 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 
 			return textview;
 		}		
-		
-		
+			
 	}
 
-	
 }
