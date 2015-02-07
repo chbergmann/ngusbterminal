@@ -75,8 +75,8 @@
 	        android:id="@+id/buttonMkdir"
 	        android:layout_width="fill_parent"
 	        android:layout_height="wrap_content"
-	        android:text="@string/alert_mkdir" />  
-	    
+	        android:text="@string/action_mkdir" />  
+
 	    <Button
 	        android:id="@+id/buttonOK"
 	        android:layout_width="fill_parent"

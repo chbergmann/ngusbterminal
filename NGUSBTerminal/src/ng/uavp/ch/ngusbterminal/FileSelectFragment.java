@@ -32,7 +32,9 @@ import java.util.Locale;
 
 import android.support.v4.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -45,12 +47,13 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 /** Select a directory or a file. 
  * 
  * */
-public class FileSelectFragment extends Fragment implements OnItemClickListener {
+public class FileSelectFragment extends Fragment implements OnItemClickListener, OnItemLongClickListener {
 
     public interface FileSelectedListener {
         void fileSelected(File file);
@@ -227,6 +230,7 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 		directoryView.setLayoutParams(listViewLayout);
 		directoryView.setAdapter(displayFormat);
 		directoryView.setOnItemClickListener(this);
+		directoryView.setOnItemLongClickListener(this);
 		
 		selectedPath = (TextView) view.findViewById(R.id.selectedPath);
 		selectedPath.setText(currentDirectory.getAbsolutePath() + "/");
@@ -329,6 +333,29 @@ public class FileSelectFragment extends Fragment implements OnItemClickListener 
 				
 		}
 		
+	}	
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+		currentFile = fileList.get(position);
+		
+		if (!currentFile.isDirectory()) {
+			Intent intent = new Intent(Intent.ACTION_EDIT); 
+			Uri uri = Uri.parse("file://" + currentFile.getAbsolutePath()); 
+			intent.setDataAndType(uri, "text/plain"); 
+		    if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+		        startActivity(intent);
+		    }
+		    else {
+		    	showToast(R.string.err_cannot_edit, Toast.LENGTH_SHORT);
+		    }
+		}
+		return false;
+	}
+
+	private void showToast(int stringRessource, int lengthShort) {
+		Toast toast = Toast.makeText(getActivity(), getString(stringRessource), lengthShort);
+		toast.show();	
 	}
 	
 	private void RefreshDirList() {

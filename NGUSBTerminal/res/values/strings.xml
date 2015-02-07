@@ -17,6 +17,8 @@
     <string name="action_start_log">Log to file</string>
     <string name="action_stop_log">Stop logging to file</string>
     <string name="action_readfile">Read file into terminal</string>
+    <string name="action_mkdir">Create directory</string>
+    <string name="action_editfile">Edit file</string>
     <string name="str_interface">Interface</string>
     <string name="flowcontrol">Flow control</string>
     <string name="error_noAdapter">No serial adapter found !</string>
@@ -30,9 +32,9 @@
     <string name="alert_supply_filename">Please enter a file name</string>
     <string name="alert_bad_filename_chars">The file name contains bad characters</string>
     <string name="alert_file_exists">The file already exists</string>
-    <string name="alert_mkdir">Create directory</string>
     <string name="filename">Filename</string>
     <string name="err_sd_not_readable">SD card is not readable !</string>
     <string name="err_sd_not_writeable">Cannot write to SD card !</string>
+    <string name="err_cannot_edit">No app installed that can edit plain text !</string>
 
 </resources>
