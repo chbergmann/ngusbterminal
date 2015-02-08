@@ -14,8 +14,14 @@
     	android:layout_height="wrap_content" 
     	android:textStyle="bold"
     	android:text="@string/alert_file_select"
+    	android:textSize="18sp"
         android:gravity="start"/>
-    
+  
+	<View 
+	    android:layout_width="fill_parent"
+	    android:layout_height="2dp"
+	    android:background="@android:color/darker_gray"/>
+	  
 	<ListView
 	    android:id="@+id/directoryView"
 	    android:layout_width="wrap_content"

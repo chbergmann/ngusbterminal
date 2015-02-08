@@ -24,15 +24,11 @@
 
 package ng.uavp.ch.ngusbterminal;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import ng.uavp.ch.ngusbterminal.MainActivity.ISerialComm;
-
 import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 
 import com.ftdi.j2xx.D2xxManager;

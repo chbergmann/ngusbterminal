@@ -242,8 +242,12 @@ int drawable abc_textfield_searchview_right_holo_light 0x7f020056
 int drawable ic_dir 0x7f020057
 int drawable ic_doc_open 0x7f020058
 int drawable ic_doc_save 0x7f020059
-int drawable ic_file 0x7f02005a
-int drawable ic_launcher 0x7f02005b
+int drawable ic_doc_stop_save 0x7f02005a
+int drawable ic_file 0x7f02005b
+int drawable ic_launcher 0x7f02005c
+int drawable ic_settings 0x7f02005d
+int drawable ic_window_close 0x7f02005e
+int drawable ic_window_new 0x7f02005f
 int id GridLayout1 0x7f060046
 int id action_bar 0x7f06001c
 int id action_bar_activity_content 0x7f060015

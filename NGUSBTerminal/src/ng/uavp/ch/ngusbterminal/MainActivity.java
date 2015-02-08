@@ -27,17 +27,11 @@ package ng.uavp.ch.ngusbterminal;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringBufferInputStream;
-import java.io.StringReader;
 import java.util.ArrayList;
-
-import ng.uavp.ch.ngusbterminal.UsbSerialComm.IReceive;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -124,7 +118,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 	public void SelectShell() {	
 		if(shell == null) {
 			shell = new ShellFragment(usb);
-		}
+		}  
 		getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, shell).commit();	
 	}
@@ -176,9 +170,9 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		}
 
 		case R.id.menu_clear: {
-			if(shell != null) {
-				ShellFragment.TerminalEditText tet = (ShellFragment.TerminalEditText) 
+			ShellFragment.TerminalEditText tet = (ShellFragment.TerminalEditText) 
 						findViewById(R.id.editText1);
+			if(tet != null) {
 				tet.setText("");
 			}
 			return true;
@@ -189,6 +183,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 
 	@Override
 	protected void onStop() {
+		StopLoggingToFile();
 		usb.closeDevice();
 		super.onStop();
 	}
@@ -313,6 +308,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 				
 			    MenuItem item = menu.findItem(R.id.menu_writefile);
 			    item.setTitle(R.string.action_stop_log);
+			    item.setIcon(R.drawable.ic_doc_stop_save);
 				
 				String str = getString(R.string.action_start_log) + " " + fileName;
 				showToast(str, Toast.LENGTH_SHORT);
@@ -357,5 +353,6 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		writeTofileHandler = null;
 	    MenuItem item = menu.findItem(R.id.menu_writefile);
 	    item.setTitle(R.string.action_start_log);
+	    item.setIcon(R.drawable.ic_doc_save);
     }
 }

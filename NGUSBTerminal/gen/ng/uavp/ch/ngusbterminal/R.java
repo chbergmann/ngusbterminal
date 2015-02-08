@@ -1087,8 +1087,12 @@ containing a value of this type.
         public static final int ic_dir=0x7f020057;
         public static final int ic_doc_open=0x7f020058;
         public static final int ic_doc_save=0x7f020059;
-        public static final int ic_file=0x7f02005a;
-        public static final int ic_launcher=0x7f02005b;
+        public static final int ic_doc_stop_save=0x7f02005a;
+        public static final int ic_file=0x7f02005b;
+        public static final int ic_launcher=0x7f02005c;
+        public static final int ic_settings=0x7f02005d;
+        public static final int ic_window_close=0x7f02005e;
+        public static final int ic_window_new=0x7f02005f;
     }
     public static final class id {
         public static final int GridLayout1=0x7f060046;
