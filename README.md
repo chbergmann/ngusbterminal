@@ -7,9 +7,9 @@ Author: Christian Bergmann christi@dev.uavp.ch
 
 NG USB Terminal V1.0
 Features:
- - Shell for any FTDI UART devices
- - Cursor key or trackball support
- - Log to file
- - Read file into terminal
- - Long click on text file opens it into a text editor
+ * Shell for any FTDI UART devices
+ * Cursor key or trackball support
+ * Log to file
+ * Read file into terminal
+ * Long click on text file opens it into a text editor
 
