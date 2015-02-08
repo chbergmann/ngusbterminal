@@ -52,6 +52,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 	UsbSerialComm usb = null;
 	ShellFragment shell = null;
 	SettingsFragment settings = null;
+	AboutFragment about = null;
 	private Menu menu;
 	
 	final static int ACTION_READFILE = 1;
@@ -130,6 +131,14 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		getSupportFragmentManager().beginTransaction()
             	.replace(R.id.fragment_container, settings).commit();		
 	}
+
+	public void SelectAbout() {	
+		if(about == null) {
+			about = new AboutFragment();
+		}
+		getSupportFragmentManager().beginTransaction()
+            	.replace(R.id.fragment_container, about).commit();		
+	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -172,9 +181,15 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		case R.id.menu_clear: {
 			ShellFragment.TerminalEditText tet = (ShellFragment.TerminalEditText) 
 						findViewById(R.id.editText1);
-			if(tet != null) {
+			if(tet != null)
 				tet.setText("");
-			}
+			else
+				SelectShell();
+			return true;
+		}
+		
+		case R.id.menu_about: {
+			SelectAbout();
 			return true;
 		}
 		}

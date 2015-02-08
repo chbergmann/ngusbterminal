@@ -28,4 +28,8 @@
         android:title="@string/action_exit"
         android:icon="@drawable/ic_window_close"
         ng.uavp.ch.ngusbterminal:showAsAction="ifRoom" />
+    
+    <item android:id="@+id/menu_about"
+        android:title="@string/action_about"
+        ng.uavp.ch.ngusbterminal:showAsAction="never" />
 </menu>

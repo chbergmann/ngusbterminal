@@ -2,6 +2,14 @@
 <resources>
 
     <string name="app_name">NG USB Terminal</string>
+    <string name="app_version">NG USB Terminal V1.0</string>
+    <string name="app_descr">Terminal for FTDI UART devices connected to USB. For android 3.2 or above with OTG or USB host interface.</string>
+    <string name="app_license">License: GPLv3 http://www.gnu.org/copyleft/gpl.html</string>
+    <string name="app_descr_uavp">Created for the NG UAVP project. Visit our website: http://ng.uavp.ch</string>
+    <string name="app_author">Author: Christian Bergmann christi@dev.uavp.ch</string>
+    <string name="app_features">Features:\n - Shell for any FTDI UART devices\n
+         - Cursor key or trackball support\n
+         - Log to file\n - Read file into terminal\n - Long click on text file opens it into a text editor</string>
     <string name="connect">connect</string>
     <string name="connected">connected</string>
     <string name="connected_to">connected to </string>
@@ -19,6 +27,7 @@
     <string name="action_readfile">Read file into terminal</string>
     <string name="action_mkdir">Create directory</string>
     <string name="action_editfile">Edit file</string>
+    <string name="action_about">About</string>
     <string name="str_interface">Interface</string>
     <string name="flowcontrol">Flow control</string>
     <string name="error_noAdapter">No serial adapter found !</string>

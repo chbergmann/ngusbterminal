@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?><RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="ng.uavp.ch.ngusbterminal.AboutFragment" >
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/app_version"
+        android:src="@drawable/ic_launcher" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/imageView1"
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="15dp"
+    	android:textSize="20sp"
+        android:layout_toEndOf="@+id/imageView1"
+        android:layout_toRightOf="@+id/imageView1"
+        android:text="@string/app_version" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/imageView1"
+        android:layout_alignStart="@+id/imageView1"
+        android:layout_below="@+id/imageView1"
+        android:text="@string/app_descr" />
+
+    <ImageView
+        android:id="@+id/imageViewNG"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2"
+        android:layout_below="@+id/textView2"
+        android:layout_marginTop="10dp"
+        android:contentDescription="@string/app_descr_uavp"
+        android:src="@drawable/ic_uavp_banner" />
+    
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imageViewNG"
+        android:text="@string/app_author"
+        android:autoLink="email" />
+
+    <TextView
+        android:id="@+id/textViewLic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView3"
+        android:text="@string/app_license"
+        android:autoLink="web" />
+    
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewLic"
+        android:layout_marginTop="10dp"
+        android:autoLink="web"
+        android:singleLine="false"
+        android:text="@string/app_features" />
+    
+</RelativeLayout>
