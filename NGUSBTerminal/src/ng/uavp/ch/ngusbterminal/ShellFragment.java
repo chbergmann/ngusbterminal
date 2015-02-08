@@ -163,19 +163,12 @@ public class ShellFragment extends Fragment {
 						break;
 
 					case KeyEvent.KEYCODE_DPAD_RIGHT:
-						if (cursorLeft > 0)
-							cursorLeft--;
-
 						usb.sendText(String.valueOf((char) 0x1b));
 						usb.sendText(String.valueOf('['));
 						usb.sendText(String.valueOf('C'));
 						break;
 
 					case KeyEvent.KEYCODE_DPAD_LEFT:
-						if (cursorLeft < length())
-							;
-						cursorLeft++;
-
 						usb.sendText(String.valueOf((char) 0x1b));
 						usb.sendText(String.valueOf('['));
 						usb.sendText(String.valueOf('D'));
@@ -242,8 +235,11 @@ public class ShellFragment extends Fragment {
 						escseq++;
 						if (escseq == 3) {
 							if (data[i] == 'D')
-								inputConnection.deleteChar();
+								cursorLeft++;
 
+							if (data[i] == 'C' && cursorLeft > 0)
+								cursorLeft--;
+							
 							escseq = 0;
 						}
 					} else if (got_r) {
@@ -262,16 +258,23 @@ public class ShellFragment extends Fragment {
 						got_r = false;
 						str.append((char) data[i]);
 					} else {
+						for(;cursorLeft > 0; cursorLeft--) {
+							if(str.length() > 0) 
+								str.deleteCharAt(str.length()-1);
+							else {
+								inputConnection.deleteChar();	
+							}
+						}
 						str.append((char) data[i]);
 					}
 					break;
 				}
 			}
 
-			if (str.length() > 0) {
-				append(str.toString());
-				setSelection(length() - cursorLeft);
-			}
+			// TODO: append() overtakes inputConnection.deleteChar()
+			append(str.toString());
+			setSelection(length()- cursorLeft);	
+				
 		}
 	}
 }
