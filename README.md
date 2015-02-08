@@ -1,8 +1,10 @@
 # ngusbterminal
-Terminal for FTDI UART devices connected to USB
+Terminal for FTDI UART devices connected to USB.
+
 For android 3.2 or above with OTG or USB host interface.
 
-Created for the NG UAVP project. Visit our website: http://ng.uavp.ch
+Created for the NG UAVP multicopter project, but it is a general terminal app, not only for multicopter control. Visit our website: http://ng.uavp.ch
+
 Author: Christian Bergmann christi@dev.uavp.ch
 
 NG USB Terminal V1.0
