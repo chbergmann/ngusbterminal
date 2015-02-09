@@ -35,6 +35,7 @@ import android.text.Selection;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.MovementMethod;
 import android.util.AttributeSet;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -122,6 +123,10 @@ public class ShellFragment extends Fragment {
 			Selection.setSelection(getText(), pos);
 		}
 
+		public void setSelection(int start, int end) {
+			Selection.setSelection(getText(), start, end);
+		}
+		
 		private class TerminalInputConnection extends InputConnectionWrapper {
 
 			public TerminalInputConnection(InputConnection target,
@@ -183,9 +188,19 @@ public class ShellFragment extends Fragment {
 				return false;
 			}
 
-			public void deleteChar() {
-				super.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,
-						KeyEvent.KEYCODE_DEL));
+			public void sendKeyToView(int keycode) {
+				super.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, keycode));
+			}
+			
+			public void sendKeyEvents(String text) {
+		        KeyCharacterMap mKeyCharacterMap = 
+		            KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
+
+		        KeyEvent[] events = mKeyCharacterMap.getEvents(text.toCharArray());
+
+		        for (KeyEvent event2 : events) {
+		            super.sendKeyEvent(new KeyEvent(event2.getAction(), event2.getKeyCode()));          
+		        }
 			}
 		}
 
@@ -223,7 +238,9 @@ public class ShellFragment extends Fragment {
 					str.append((char) data[i]);
 					npos = length() + str.length();
 					got_r = false;
-					cursorLeft = 0;
+					for(; cursorLeft > 0; cursorLeft--)
+						inputConnection.sendKeyToView(KeyEvent.KEYCODE_DPAD_RIGHT); 
+
 					break;
 
 				case '\r':
@@ -234,12 +251,18 @@ public class ShellFragment extends Fragment {
 					if (escseq > 0) {
 						escseq++;
 						if (escseq == 3) {
-							if (data[i] == 'D')
-								cursorLeft++;
-
-							if (data[i] == 'C' && cursorLeft > 0)
-								cursorLeft--;
-							
+							if (data[i] == 'D') {
+								cursorLeft++;	
+								inputConnection.sendKeyEvents(str.toString());
+								str.delete(0, str.length());
+								inputConnection.sendKeyToView(KeyEvent.KEYCODE_DPAD_LEFT);
+							}
+							if (data[i] == 'C' && cursorLeft > 0) {
+								cursorLeft--;		
+								inputConnection.sendKeyEvents(str.toString());
+								str.delete(0, str.length());
+								inputConnection.sendKeyToView(KeyEvent.KEYCODE_DPAD_RIGHT); 
+							}
 							escseq = 0;
 						}
 					} else if (got_r) {
@@ -258,11 +281,11 @@ public class ShellFragment extends Fragment {
 						got_r = false;
 						str.append((char) data[i]);
 					} else {
-						for(;cursorLeft > 0; cursorLeft--) {
+						for(;cursorLeft > 0; cursorLeft--) {							
 							if(str.length() > 0) 
 								str.deleteCharAt(str.length()-1);
 							else {
-								inputConnection.deleteChar();	
+								inputConnection.sendKeyToView(KeyEvent.KEYCODE_FORWARD_DEL);
 							}
 						}
 						str.append((char) data[i]);
@@ -271,10 +294,15 @@ public class ShellFragment extends Fragment {
 				}
 			}
 
-			// TODO: append() overtakes inputConnection.deleteChar()
-			append(str.toString());
-			setSelection(length()- cursorLeft);	
-				
+			if(cursorLeft == 0) {
+				// sending single key events is too slow, so append text if possible
+				append(str.toString());
+				setSelection(length());	
+			}
+			else {
+				// we have to send single key events for cursor key handling 
+				inputConnection.sendKeyEvents(str.toString());
+			}		
 		}
 	}
 }
