@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">NG USB Terminal</string>
-    <string name="app_version">NG USB Terminal V1.0</string>
     <string name="app_descr">Terminal for FTDI UART devices connected to USB. For android 3.2 or above with OTG or USB host interface.</string>
     <string name="app_license">License: GPLv3 http://www.gnu.org/copyleft/gpl.html</string>
     <string name="app_descr_uavp">Created for the NG UAVP project. Visit our website: http://ng.uavp.ch</string>

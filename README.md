@@ -7,7 +7,7 @@ Created for the NG UAVP multicopter project, but it is a general terminal app, n
 
 Author: Christian Bergmann christi@dev.uavp.ch
 
-NG USB Terminal V1.0
+NG USB Terminal V1.01
 Features:
  * Shell for any FTDI UART devices
  * Cursor key or trackball support

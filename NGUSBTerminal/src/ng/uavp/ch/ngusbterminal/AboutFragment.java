@@ -25,6 +25,7 @@
 package ng.uavp.ch.ngusbterminal;
 
 import android.content.Intent;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class AboutFragment extends Fragment {
     @Override
@@ -50,6 +52,15 @@ public class AboutFragment extends Fragment {
                 startActivity(intent);
             }
         });
+        
+        TextView txt1 = (TextView)view.findViewById(R.id.textView1);
+        String versionName = "?";
+		try {
+			versionName = getActivity().getPackageManager().getPackageInfo(getActivity().getPackageName(), 0).versionName;
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+        txt1.setText(getText(R.string.app_name) + " V" + versionName);
       
         return view;
     }
