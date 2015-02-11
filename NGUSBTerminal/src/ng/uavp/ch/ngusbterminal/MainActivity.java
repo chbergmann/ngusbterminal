@@ -32,49 +32,59 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.support.v4.app.Fragment;
 
 import com.ftdi.j2xx.D2xxManager;
 
 public class MainActivity extends ActionBarActivity implements FileSelectFragment.IFileSelectCallbacks {
 
-	UsbSerialComm usb = null;
-	ShellFragment shell = null;
-	SettingsFragment settings = null;
-	AboutFragment about = null;
-	private Menu menu;
+	public  UsbSerialComm usb = null;
+	private ShellFragment shell = null;
+	private SettingsFragment settings = null;
+	private AboutFragment about = null;
+	private Menu menu = null;
+	private int selectedTab = 0;
 	
 	final static int ACTION_READFILE = 1;
 	final static int ACTION_WRITEFILE = 2;
 
-    public interface ISerialComm {
-    	public void addReceiveEventHandler(Handler mHandler);
+	final static int TAB_CONNECT = 1;
+	final static int TAB_SHELL = 2;
+	final static int TAB_ABOUT = 3;
+
+	public static final String NEWLINE = "\n\r";
+
+    public interface ISerialSend {
     	public int sendBytes(byte[] data);
     	public int sendText(CharSequence text);
     }
 
+	public interface ISerialReceive {
+		void OnReceive(byte[] data);
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_terminal);
-
+	    
 		usb = new UsbSerialComm(this);
 
 		if(OpenUsb())
-			SelectShell();
+			ShowTab(TAB_SHELL);
 		else
-			SelectSettings();
+			ShowTab(TAB_CONNECT);
 	}
 	
 	public boolean OpenUsb() {
@@ -115,29 +125,46 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		
 		return false;
 	}
-	
-	public void SelectShell() {	
-		if(shell == null) {
-			shell = new ShellFragment(usb);
-		}  
-		getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, shell).commit();	
-	}
 
-	public void SelectSettings() {	
-		if(settings == null) {
-			settings = new SettingsFragment();
-		}
-		getSupportFragmentManager().beginTransaction()
-            	.replace(R.id.fragment_container, settings).commit();		
-	}
+	public void ShowTab(int tab) {
+		Fragment selected = null;
+		boolean menu_writefile = false;
+		boolean menu_readfile = false;
+		
+		switch (tab) {
+		case TAB_CONNECT:
+			if(settings == null)
+				settings = new SettingsFragment();
+			selected = settings;
+			break;
 
-	public void SelectAbout() {	
-		if(about == null) {
-			about = new AboutFragment();
+		case TAB_SHELL:
+			menu_writefile = true;
+			menu_readfile = true;
+			if (shell == null) {
+				shell = new ShellFragment(usb);
+				usb.addReceiveEventHandler(shell);
+			}
+			selected = shell;
+			break;
+
+		case TAB_ABOUT:
+			if(about == null) 
+				about = new AboutFragment();
+			selected = about;
+			break;
 		}
-		getSupportFragmentManager().beginTransaction()
-            	.replace(R.id.fragment_container, about).commit();		
+
+		if(menu != null) {
+		    menu.findItem(R.id.menu_writefile).setVisible(menu_writefile);
+		    menu.findItem(R.id.menu_readfile).setVisible(menu_readfile);
+	    }
+		
+		if(selected != null) {
+			selectedTab = tab;
+			getSupportFragmentManager().beginTransaction()
+				.replace(R.id.fragment_container, selected).commit();
+		}
 	}
 	
 	@Override
@@ -156,7 +183,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		int id = item.getItemId();
 		switch (id) {
 		case R.id.menu_settings: {
-			SelectSettings();
+			ShowTab(TAB_CONNECT);
 			return true;
 		}
 
@@ -171,10 +198,16 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		}
 
 		case R.id.menu_writefile: {
-			if(outputStream != null)
-				StopLoggingToFile();
-			else
+			if(logtofile.isActive()) {
+				logtofile.StopLoggingToFile();
+			    MenuItem itemwf = menu.findItem(R.id.menu_writefile);
+			    itemwf.setTitle(R.string.action_start_log);
+			    itemwf.setIcon(R.drawable.ic_doc_save);
+			}
+			else {
 				writeFile();
+				
+			}
 			return true;
 		}
 
@@ -184,12 +217,12 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 			if(tet != null)
 				tet.setText("");
 			else
-				SelectShell();
+				ShowTab(TAB_SHELL);
 			return true;
 		}
 		
 		case R.id.menu_about: {
-			SelectAbout();
+			ShowTab(TAB_ABOUT);
 			return true;
 		}
 		}
@@ -198,15 +231,13 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 
 	@Override
 	protected void onStop() {
-		StopLoggingToFile();
+		logtofile.StopLoggingToFile();
 		usb.closeDevice();
 		super.onStop();
 	}
 
 	/* -------------------------- File Operations -------------------------- */
-
-	BufferedOutputStream outputStream = null;
-	Handler writeTofileHandler = null;
+	Filewriter logtofile = new Filewriter();
 
 	/* Checks if external storage is available for read and write */
 	public boolean isExternalStorageWritable() {
@@ -278,7 +309,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 	public void onConfirmSelect(int actionID, String absolutePath, String fileName) {		
 		// Cancel pressed
 		if(fileName == "") {
-			SelectShell();	
+			ShowTab(selectedTab);	
 			return;	
 		}
 		
@@ -308,22 +339,11 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 				return;
 			}
 			try {
-				File outputFile = new File(absolutePath, fileName);
-				outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+				logtofile.StartWritingToFile(absolutePath, fileName);
 
-		    	writeTofileHandler = new Handler(Looper.getMainLooper()) {
-					@Override
-					public void handleMessage(Message inputMessage) {
-						byte[] receivedData = (byte[]) inputMessage.obj;
-						OnReceiveForFile(receivedData);
-					}
-				};
-
-				usb.addReceiveEventHandler(writeTofileHandler);
-				
 			    MenuItem item = menu.findItem(R.id.menu_writefile);
 			    item.setTitle(R.string.action_stop_log);
-			    item.setIcon(R.drawable.ic_doc_stop_save);
+			    item.setIcon(R.drawable.ic_doc_stop_save);	
 				
 				String str = getString(R.string.action_start_log) + " " + fileName;
 				showToast(str, Toast.LENGTH_SHORT);
@@ -333,7 +353,7 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 			break;
 		}
 		}
-		SelectShell();
+		ShowTab(selectedTab);
 	}
 
 	@Override
@@ -341,33 +361,52 @@ public class MainActivity extends ActionBarActivity implements FileSelectFragmen
 		String sddir = Environment.getExternalStorageDirectory().getAbsolutePath();
 		return absolutePath.startsWith(sddir);
 	}
-    
-    private void OnReceiveForFile(byte[] data) {
-    	if(outputStream == null) {
-    		usb.removeReceiveEventHandler(writeTofileHandler);
-    		return;
-    	}
-    	try {
-			outputStream.write(data);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-    }
-    
-    private void StopLoggingToFile() {
-    	if(outputStream == null)
-    		return;
-    	
-    	usb.removeReceiveEventHandler(writeTofileHandler);
-    	try {
-			outputStream.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		outputStream = null;
-		writeTofileHandler = null;
-	    MenuItem item = menu.findItem(R.id.menu_writefile);
-	    item.setTitle(R.string.action_start_log);
-	    item.setIcon(R.drawable.ic_doc_save);
-    }
+	
+	private class Filewriter implements ISerialReceive {
+		private BufferedOutputStream outputStream = null;
+		private final Lock mutex = new ReentrantLock(true);
+		
+	    @Override
+	    public void OnReceive(byte[] data) {
+	    	mutex.lock();
+	    	if(outputStream != null) {		
+		    	try {
+					outputStream.write(data);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	    	}
+	    	mutex.unlock();
+	    }
+	    
+	    public void StartWritingToFile(String absolutePath, String fileName) 
+	    		throws FileNotFoundException {
+			File outputFile = new File(absolutePath, fileName);
+	    	mutex.lock();
+			outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+	    	mutex.unlock();
+
+			usb.addReceiveEventHandler(this);
+	    }
+	    
+	    public void StopLoggingToFile() {
+	    	if(outputStream == null)
+	    		return;
+	    	
+	    	usb.removeReceiveEventHandler(this);
+	    	mutex.lock();
+	    	try {
+				outputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			outputStream = null;
+	    	mutex.unlock();
+	    }
+	    
+	    public boolean isActive() {
+	    	return outputStream != null;
+	    }
+	    
+	}
 }

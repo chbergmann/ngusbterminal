@@ -45,13 +45,15 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
-import ng.uavp.ch.ngusbterminal.MainActivity.ISerialComm;
+import ng.uavp.ch.ngusbterminal.MainActivity.ISerialSend;
+import ng.uavp.ch.ngusbterminal.MainActivity.ISerialReceive;
 
-public class ShellFragment extends Fragment {
+public class ShellFragment extends Fragment implements ISerialReceive {
 	TerminalEditText terminalView;
-	ISerialComm serial;
+	ISerialSend serial;
+	Handler recvHandler;
 	
-	public ShellFragment(ISerialComm serial) {
+	public ShellFragment(ISerialSend serial) {
 		super();
 		this.serial = serial;
 	}
@@ -64,6 +66,13 @@ public class ShellFragment extends Fragment {
 
 		terminalView = (TerminalEditText) view.findViewById(R.id.editText1);
 		terminalView.HookSerialDevice(serial);
+		recvHandler = new Handler(Looper.getMainLooper()) {
+			@Override
+			public void handleMessage(Message inputMessage) {
+				byte[] receivedData = (byte[]) inputMessage.obj;
+				terminalView.OnReceived(receivedData);
+			}
+		};
 		
 		if (terminalView.requestFocus()) {
 			InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -78,16 +87,15 @@ public class ShellFragment extends Fragment {
     	terminalView.setText(text);
     }
     
-    public void HookSerialDevice(ISerialComm serial) {
+    public void HookSerialDevice(ISerialSend serial) {
     	terminalView.HookSerialDevice(serial);
     }
 
 	public static class TerminalEditText extends TextView {
-		ISerialComm usb;
+		ISerialSend usb;
 		int escseq = 0;
 		int cursorLeft = 0;
 		TerminalInputConnection inputConnection;
-		static final String NEWLINE = "\n\r";
 
 		public TerminalEditText(Context context) {
 			this(context, null);
@@ -148,7 +156,7 @@ public class ShellFragment extends Fragment {
 				if (event.getAction() == KeyEvent.ACTION_DOWN) {
 					switch (event.getKeyCode()) {
 					case KeyEvent.KEYCODE_ENTER:
-						usb.sendText(NEWLINE);
+						usb.sendText(MainActivity.NEWLINE);
 						break;
 
 					case KeyEvent.KEYCODE_DEL:
@@ -204,17 +212,8 @@ public class ShellFragment extends Fragment {
 			}
 		}
 
-		public void HookSerialDevice(ISerialComm serial) {
+		public void HookSerialDevice(ISerialSend serial) {
 			usb = serial;
-			Handler mHandler = new Handler(Looper.getMainLooper()) {
-				@Override
-				public void handleMessage(Message inputMessage) {
-					byte[] receivedData = (byte[]) inputMessage.obj;
-					OnReceived(receivedData);
-				}
-			};
-
-			usb.addReceiveEventHandler(mHandler);
 		}
 
 		@Override
@@ -304,5 +303,13 @@ public class ShellFragment extends Fragment {
 				inputConnection.sendKeyEvents(str.toString());
 			}		
 		}
+	}
+
+
+	@Override
+	public void OnReceive(byte[] data) {
+		// Send serial data to GUI thread
+		Message msg = recvHandler.obtainMessage(0, data);
+		recvHandler.sendMessage(msg);
 	}
 }

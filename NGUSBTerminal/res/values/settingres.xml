@@ -40,5 +40,7 @@
         <item>RTS/CTS</item>
         <item>DTR/DSR</item>
         <item>XON/XOFF</item>
+        <item>ANGCtrl</item>
     </string-array>
+    
 </resources>

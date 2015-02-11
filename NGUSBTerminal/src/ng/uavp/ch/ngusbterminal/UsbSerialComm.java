@@ -27,35 +27,34 @@ package ng.uavp.ch.ngusbterminal;
 import java.util.ArrayList;
 import java.util.List;
 
+import ng.uavp.ch.ngusbterminal.MainActivity.ISerialReceive;
+import ng.uavp.ch.ngusbterminal.MainActivity.ISerialSend;
+
 import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
 
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.D2xxManager.FtDeviceInfoListNode;
 import com.ftdi.j2xx.FT_Device;
 
-public class UsbSerialComm implements MainActivity.ISerialComm {
-	public static D2xxManager ftD2xx = null;
-	FT_Device ftDev = null;
+public class UsbSerialComm implements ISerialSend {
+	private static D2xxManager ftD2xx = null;
+	private FT_Device ftDev = null;
 	static Context global_context;
 	boolean bReadTheadEnable = false;
-    
-	public interface IReceive {
-		void OnReceive(byte[] data);
-	}
+	boolean bSoftwareFlowControl = false;
+	WriteThread writeThread = null;
 
-    private List<Handler> receiveHandlerList = new ArrayList<Handler>();
+    private List<ISerialReceive> receiveHandlerList = new ArrayList<ISerialReceive>();
     
     // Method for listener classes to register themselves
-    public void addReceiveEventHandler(Handler handler)
+    public void addReceiveEventHandler(ISerialReceive callback)
     {
-    	receiveHandlerList.add(handler);
+    	receiveHandlerList.add(callback);
     }
 
-    public void removeReceiveEventHandler(Handler handler)
+    public void removeReceiveEventHandler(ISerialReceive callback)
     {
-    	receiveHandlerList.remove(handler);
+    	receiveHandlerList.remove(callback);
     }
 	
     final byte XON = 0x11;    /* Resume transmission */
@@ -127,6 +126,7 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 		ftDev.setDataCharacteristics(settings.dataBits, settings.stopBits, parity);
 
 		short flowCtrlSetting;
+		bSoftwareFlowControl = false;
 		switch (settings.flowControl)
 		{
 		case 0:
@@ -142,6 +142,7 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 			flowCtrlSetting = D2xxManager.FT_FLOW_XON_XOFF;
 			break;
 		default:
+			bSoftwareFlowControl = true;
 			flowCtrlSetting = D2xxManager.FT_FLOW_NONE;
 			break;
 		}
@@ -151,11 +152,24 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 		bReadTheadEnable = true;
 		ReadThread rthread = new ReadThread();
 		rthread.start();
+		
+		writeThread = new WriteThread();
+		writeThread.start();
 		return true;
+	}
+	
+	public boolean isOpen() {
+		if(ftDev == null)
+			return false;
+		
+		return ftDev.isOpen();
 	}
 	
 	public void closeDevice() {
 		bReadTheadEnable = false;
+		if(writeThread != null)
+			writeThread.Stop();
+		
 		if(ftDev == null)
 			return;
 		
@@ -166,20 +180,20 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 	public int sendBytes(byte[] data) {
 		if(ftDev == null || !ftDev.isOpen())
 			return -1;
-		return ftDev.write(data, data.length);
+		
+		return writeThread.queueWrite(data);
 	}
 
 	@Override
-	public int sendText(CharSequence text) {
-		if(ftDev == null || !ftDev.isOpen())
-			return -1;
-		
+	public int sendText(CharSequence text) {		
 		byte[] ascii = new byte[text.length()];
 		for(int i=0; i<text.length(); i++)
 			ascii[i] = (byte)text.charAt(i);
 		
-		return ftDev.write(ascii, ascii.length);
+		return sendBytes(ascii);
 	}
+	
+	int bytes_sent = 0;
 	
 	class ReadThread extends Thread
 	{
@@ -192,10 +206,14 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 					
 					ftDev.read(readbuffer, readcount);
 					
-					for(Handler recvHandler : receiveHandlerList) {
-			        	Message msg = recvHandler.obtainMessage(0, readbuffer);
-			        	recvHandler.sendMessage(msg);
+					for(ISerialReceive callback : receiveHandlerList) {
+						callback.OnReceive(readbuffer);
 					}
+					
+					if(bytes_sent - readcount <= 0)
+						bytes_sent = 0;
+					else
+						bytes_sent -= readcount;
 				}
 				
 				try {
@@ -206,5 +224,73 @@ public class UsbSerialComm implements MainActivity.ISerialComm {
 			}
 		}
 	}
-	
+
+	class WriteThread extends Thread {
+		private final int SEND_MAX_BYTES = 127;
+	    private byte[] writebuffer = new byte[8192];
+	    private int rdptr;
+	    private int wrptr;
+	    public boolean threadEnable;
+	    
+	    public WriteThread() {
+	    	threadEnable = true;
+	    	bytes_sent = 0;
+	    	rdptr = 0;
+	    	wrptr = 0;
+	    }
+	    
+		public void run() {
+			byte[] toSend = new byte[1];
+			while (true == threadEnable) 
+			{
+				synchronized(writebuffer) {
+					try {
+						writebuffer.wait();
+					} catch (InterruptedException e1) {
+						break;
+					}
+				}
+				
+				while(rdptr != wrptr) {					
+					toSend[0] = writebuffer[rdptr];
+					rdptr = ((rdptr+1) % writebuffer.length);
+					ftDev.write(toSend);
+					
+					bytes_sent++;
+					if(bSoftwareFlowControl) {
+						while(bytes_sent >= SEND_MAX_BYTES) {
+							try {
+								Thread.sleep(50);
+							}
+							catch (InterruptedException e) {
+							}							
+						}
+					}
+				}				
+			}
+		}
+		
+		public int queueWrite(byte[] data) {
+			for(int i=0; i<data.length; i++) {
+				int new_wrptr = ((wrptr+1) % writebuffer.length);
+				if(new_wrptr == rdptr)
+					return i;
+				
+				writebuffer[wrptr] = data[i];
+				wrptr = new_wrptr;
+			}
+
+			synchronized(writebuffer) {
+				writebuffer.notifyAll();
+			}
+			return data.length;
+		}
+		
+		public void Stop() {
+			threadEnable = false;
+			synchronized(writebuffer) {
+				writebuffer.notifyAll();
+			}	
+		}
+	}
 }

@@ -220,7 +220,7 @@ public class SettingsFragment extends Fragment {
 		editor.commit();
 
 		if(activity.OpenUsb())
-			activity.SelectShell();
+			activity.ShowTab(MainActivity.TAB_SHELL);
 	}
 
 }

@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ng.uavp.ch.ngusbterminal"
     android:versionCode="1"
-    android:versionName="1.01" >
+    android:versionName="1.02" >
 
     <uses-sdk
-        android:minSdkVersion="14"
+        android:minSdkVersion="13"
         android:targetSdkVersion="21" />
 
     <uses-feature android:name="android.hardware.usb.host" />

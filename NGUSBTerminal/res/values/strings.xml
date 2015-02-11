@@ -8,7 +8,8 @@
     <string name="app_author">Author: Christian Bergmann christi@dev.uavp.ch</string>
     <string name="app_features">Features:\n - Shell for any FTDI UART devices\n
          - Cursor key or trackball support\n
-         - Log to file\n - Read file into terminal\n - Long click on text file opens it into a text editor</string>
+         - Log to file\n - Read file into terminal\n - Long click on text file opens it into a text editor\n
+         - Software flow control. Select ANGCtrl in Connect tab. (Sent bytes minus received bytes may not exceed 127)</string>
     <string name="connect">connect</string>
     <string name="connected">connected</string>
     <string name="connected_to">connected to </string>
